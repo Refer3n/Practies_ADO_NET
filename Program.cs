@@ -12,39 +12,34 @@ namespace Pract1
 
             storage.TryConnect();
 
-            Console.WriteLine("|||||||||||||||||||||||||||||||||||||||");
-
-            storage.ShowAllProductsInfo();
+            storage.FillDB();
 
             Console.WriteLine("|||||||||||||||||||||||||||||||||||||||");
 
-            storage.ShowAllProductTypes();
+            storage.ShowAllItems();
+
+            Console.WriteLine("|||||||||||||||||||||||||||||||||||||||");
+
+            storage.ShowAllTypes();
 
             Console.WriteLine("|||||||||||||||||||||||||||||||||||||||");
 
             storage.ShowAllSuppliers();
-
-            Console.WriteLine("|||||||||||||||||||||||||||||||||||||||");
-
-            storage.ShowProductWithMaxQuantity();
-
-            Console.WriteLine("|||||||||||||||||||||||||||||||||||||||");
-
-            storage.ShowProductWithMinQuantity();
-
-            Console.WriteLine("|||||||||||||||||||||||||||||||||||||||");
-
-            storage.ShowProductWithMinCost();
-
-            Console.WriteLine("|||||||||||||||||||||||||||||||||||||||");
-
-            storage.ShowProductWithMaxCost();
         }
     }
 
     public class Storage
     {
-        public static string ConnectionString => ConfigurationManager.ConnectionStrings["DefaultConnection"].ToString();
+        private static string ConnectionString => ConfigurationManager.ConnectionStrings["DefaultConnection"].ToString();
+
+        private static string GetSelectQuery(string tbName) => $"select * from {tbName}";
+
+        Dictionary<string, Dictionary<string, List<string>>> database;
+
+        public Storage()
+        {
+            database = new();
+        }
 
         public void TryConnect()
         {
@@ -65,189 +60,144 @@ namespace Pract1
             }
         }
 
-        public void ShowAllProductsInfo()
+        public void ShowAllItems()
         {
-            using (SqlConnection connection = new SqlConnection(ConnectionString))
+            foreach (var tableName in database.Keys)
             {
-                connection.Open();
+                Console.WriteLine($"Table: {tableName}");
+                var tableData = database[tableName];
 
-                string query = "select P.ProductName, PT.TypeName, S.SupplierName, P.Quantity, P.Cost, P.SupplyDate " +
-                               "from Products P " +
-                               "join ProductTypes PT on P.ProductType_Id = PT.Id " +
-                               "join Suppliers S on P.Supplier_Id = S.Id";
-
-                SqlDataAdapter adapter = new SqlDataAdapter(query, connection);
-
-                DataSet dataSet = new DataSet();
-                adapter.Fill(dataSet, "ProductsTable");
-
-                Console.WriteLine("Product Name\tProduct Type\tSupplier Name\t\t\tQuantity\tCost\t\tSupply Date");
-
-                foreach (DataRow row in dataSet.Tables[0].Rows)
+                if (tableData.Count > 0)
                 {
-                    Console.WriteLine($"{row["ProductName"]}\t\t{row["TypeName"]}\t\t{row["SupplierName"]}\t\t" +
-                        $"{row["Quantity"]}\t\t{row["Cost"]}\t\t{row["SupplyDate"]}");
+                    var columnNames = tableData.Keys.ToList();
+
+                    Console.WriteLine(string.Join("\t", columnNames));
+
+                    var rowCount = tableData[columnNames[0]].Count;
+
+                    for (int i = 0; i < rowCount; i++)
+                    {
+                        foreach (var columnName in columnNames)
+                        {
+                            Console.Write(tableData[columnName][i] + "\t  ");
+                        }
+                        Console.WriteLine();
+                    }
                 }
 
-                connection.Close();
+                Console.WriteLine();
             }
-
         }
 
-        public void ShowAllProductTypes()
+
+        public void ShowAllTypes()
         {
-            using (SqlConnection connection = new SqlConnection(ConnectionString))
+            if (database.ContainsKey("[dbo].[ProductTypes]"))
             {
-                connection.Open();
-
-                string query = "select TypeName from ProductTypes";
-
-                SqlDataAdapter adapter = new SqlDataAdapter(query, connection);
-
-                DataSet dataSet = new DataSet();
-                adapter.Fill(dataSet, "ProductTypes");
-
-                Console.WriteLine("Product types: ");
-
-                Print(dataSet, "TypeName");
-
-                connection.Close();
+                var types = database["[dbo].[ProductTypes]"]["TypeName"];
+                Console.WriteLine("Types of Products:");
+                Console.WriteLine(string.Join(", ", types));
             }
         }
 
         public void ShowAllSuppliers()
         {
-            using (SqlConnection connection = new SqlConnection(ConnectionString))
+            if (database.ContainsKey("[dbo].[Suppliers]"))
             {
-                connection.Open();
-
-                string query = "select SupplierName from Suppliers";
-
-                SqlDataAdapter adapter = new SqlDataAdapter(query, connection);
-
-                DataSet dataSet = new DataSet();
-                adapter.Fill(dataSet, "Suppliers");
-
-                Console.WriteLine("Product suppliers: ");
-
-                Print(dataSet, "SupplierName");
-
-                connection.Close();
+                var types = database["[dbo].[Suppliers]"]["SupplierName"];
+                Console.WriteLine("Suppliers: ");
+                Console.WriteLine(string.Join(", ", types));
             }
         }
 
-        public void ShowProductWithMaxQuantity()
+        public void FillDB()
         {
-            using (SqlConnection connection = new SqlConnection(ConnectionString))
+            try
             {
-                connection.Open();
-
-                string query = "select top 1 P.ProductName, P.Quantity " +
-                       "from Products P " +
-                       "order by P.Quantity desc";
-
-                SqlCommand command = new SqlCommand(query, connection);
-                SqlDataReader reader = command.ExecuteReader();
-
-                if (reader.Read())
+                using (SqlConnection connection = new SqlConnection(ConnectionString))
                 {
-                    string productName = (string)reader["ProductName"];
-                    int quantity = (int)reader["Quantity"];
+                    connection.Open();
 
-                    Console.WriteLine($"Product with Maximum Quantity: {productName}, Quantity: {quantity}");
+                    var tableNames = GetTableNames(connection);
+
+                    foreach (var tableName in tableNames)
+                    {
+                        var columns = GetColumnNames(connection, tableName);
+
+                        var tableData = new Dictionary<string, List<string>>();
+
+                        using (SqlCommand cmd = new SqlCommand(GetSelectQuery(tableName), connection))
+                        {
+                            using (SqlDataReader reader = cmd.ExecuteReader())
+                            {
+                                while (reader.Read())
+                                {
+                                    foreach (var columnName in columns)
+                                    {
+                                        if (!tableData.ContainsKey(columnName))
+                                        {
+                                            tableData[columnName] = new List<string>();
+                                        }
+                                        tableData[columnName].Add(reader[columnName].ToString());
+                                    }
+                                }
+                            }
+                        }
+
+                        database[tableName] = tableData;
+                    }
+
+                    Console.WriteLine("Database filled successfully");
+
+                    connection.Close();
                 }
-
-                connection.Close();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
             }
         }
 
-        public void ShowProductWithMinQuantity()
+        private static List<string> GetTableNames(SqlConnection sqlConnection, params string[] name)
         {
-            using (SqlConnection connection = new SqlConnection(ConnectionString))
+            var tables = new List<string>();
+
+            if (name.Length > 0)
             {
-                connection.Open();
-
-                string query = "select top 1 P.ProductName, P.Quantity " +
-                       "from Products P " +
-                       "order by P.Quantity asc";
-
-                SqlCommand command = new SqlCommand(query, connection);
-                SqlDataReader reader = command.ExecuteReader();
-
-                if (reader.Read())
+                foreach (DataRow dr in sqlConnection.GetSchema("Tables").Rows)
                 {
-                    string productName = (string)reader["ProductName"];
-                    int quantity = (int)reader["Quantity"];
-
-                    Console.WriteLine($"Product with Minimum Quantity: {productName}, Quantity: {quantity}");
+                    if (name.Contains(dr[2].ToString()))
+                    {
+                        tables.Add($"[{dr[1]}].[{dr[2]}]");
+                    }
                 }
-
-                reader.Close();
-
-                connection.Close();
             }
-        }
-
-        public void ShowProductWithMinCost()
-        {
-            using (SqlConnection connection = new SqlConnection(ConnectionString))
+            else
             {
-                connection.Open();
-
-                string query = "select top 1 P.ProductName, P.Cost " +
-                               "from Products P " +
-                               "order by P.Cost asc";
-
-                SqlCommand command = new SqlCommand(query, connection);
-                SqlDataReader reader = command.ExecuteReader();
-
-                if (reader.Read())
+                foreach (DataRow dr in sqlConnection.GetSchema("Tables").Rows)
                 {
-                    string productName = (string)reader["ProductName"];
-                    decimal cost = (decimal)reader["Cost"];
-
-                    Console.WriteLine($"Product with Minimum Cost: {productName}, Cost: {cost:f2}");
+                    tables.Add($"[{dr[1]}].[{dr[2]}]");
                 }
-
-                reader.Close();
-
-                connection.Close();
             }
+
+            return tables;
         }
 
-        public void ShowProductWithMaxCost()
+        private static List<string> GetColumnNames(SqlConnection sqlConnection, string tbName)
         {
-            using (SqlConnection connection = new SqlConnection(ConnectionString))
+            var colums = new List<string>();
+
+            using (SqlCommand cmd = new SqlCommand(GetSelectQuery(tbName), sqlConnection))
             {
-                connection.Open();
-
-                string query = "select top 1 P.ProductName, P.Cost " +
-                               "from Products P " +
-                               "order by P.Cost desc";
-
-                SqlCommand command = new SqlCommand(query, connection);
-                SqlDataReader reader = command.ExecuteReader();
-
-                if (reader.Read())
+                using (SqlDataReader reader = cmd.ExecuteReader())
                 {
-                    string productName = (string)reader["ProductName"];
-                    decimal cost = (decimal)reader["Cost"];
-
-                    Console.WriteLine($"Product with Maximum Cost: {productName}, Cost: {cost:f2}");
+                    for (int i = 0; i < reader.FieldCount; i++)
+                    {
+                        colums.Add(reader.GetName(i));
+                    }
                 }
-
-                reader.Close();
-
-                connection.Close();
             }
-        }
-
-        private void Print(DataSet dataSet, string key)
-        {
-            foreach (DataRow row in dataSet.Tables[0].Rows)
-            {
-                Console.WriteLine(row[key]);
-            }
+            return colums;
         }
     }
 }

@@ -1,0 +1,15 @@
+E:\Education\AdoNet\Practs\Pract4.DAL\bin\Debug\net6.0\Pract4.DAL.dll.config
+E:\Education\AdoNet\Practs\Pract4.DAL\bin\Debug\net6.0\Pract4.DAL.deps.json
+E:\Education\AdoNet\Practs\Pract4.DAL\bin\Debug\net6.0\Pract4.DAL.runtimeconfig.json
+E:\Education\AdoNet\Practs\Pract4.DAL\bin\Debug\net6.0\Pract4.DAL.dll
+E:\Education\AdoNet\Practs\Pract4.DAL\bin\Debug\net6.0\Pract4.DAL.pdb
+E:\Education\AdoNet\Practs\Pract4.DAL\obj\Debug\net6.0\Pract4.DAL.csproj.AssemblyReference.cache
+E:\Education\AdoNet\Practs\Pract4.DAL\obj\Debug\net6.0\Pract4.DAL.GeneratedMSBuildEditorConfig.editorconfig
+E:\Education\AdoNet\Practs\Pract4.DAL\obj\Debug\net6.0\Pract4.DAL.AssemblyInfoInputs.cache
+E:\Education\AdoNet\Practs\Pract4.DAL\obj\Debug\net6.0\Pract4.DAL.AssemblyInfo.cs
+E:\Education\AdoNet\Practs\Pract4.DAL\obj\Debug\net6.0\Pract4.DAL.csproj.CoreCompileInputs.cache
+E:\Education\AdoNet\Practs\Pract4.DAL\obj\Debug\net6.0\Pract4.DAL.dll
+E:\Education\AdoNet\Practs\Pract4.DAL\obj\Debug\net6.0\refint\Pract4.DAL.dll
+E:\Education\AdoNet\Practs\Pract4.DAL\obj\Debug\net6.0\Pract4.DAL.pdb
+E:\Education\AdoNet\Practs\Pract4.DAL\obj\Debug\net6.0\Pract4.DAL.genruntimeconfig.cache
+E:\Education\AdoNet\Practs\Pract4.DAL\obj\Debug\net6.0\ref\Pract4.DAL.dll
